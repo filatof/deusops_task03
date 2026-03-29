@@ -1,0 +1,3 @@
+CREATE USER wiki WITH PASSWORD 'wiki_pass';
+CREATE USER n8n WITH PASSWORD 'n8n_pass';
+CREATE USER ollama WITH PASSWORD 'ollama_pass';
