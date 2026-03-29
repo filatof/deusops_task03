@@ -1,0 +1,23 @@
+services:
+  n8n:
+    image: nexus.eqlan.ru/n8nio/n8n:2.6.4
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: ${DB_POSTGRESDB_HOST}
+      DB_POSTGRESDB_PORT: ${DB_POSTGRESDB_PORT}
+      DB_POSTGRESDB_DATABASE: ${DB_POSTGRESDB_DATABASE}
+      DB_POSTGRESDB_USER: ${DB_POSTGRESDB_USER}
+      DB_POSTGRESDB_PASSWORD: ${DB_POSTGRESDB_PASSWORD}
+      DB_POSTGRESDB_SCHEMA: ${DB_POSTGRESDB_SCHEMA}
+      N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE}
+      N8N_RUNNERS_MODE: internal
+
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+volumes:
+  n8n_data:
