@@ -1,0 +1,37 @@
+# Terraform directories (recursive)
+**/.terraform/*
+
+# State files (anywhere)
+**/*.tfstate
+**/*.tfstate.*
+
+# Crash logs
+**/crash.log
+**/crash.*.log
+
+# Sensitive tfvars (anywhere)
+**/*.tfvars
+**/*.tfvars.json
+
+# Override files
+**/override.tf
+**/override.tf.json
+**/*_override.tf
+**/*_override.tf.json
+
+# Lock info
+**/.terraform.tfstate.lock.info
+**/*.lock.hcl
+
+# CLI config
+**/.terraformrc
+**/terraform.rc
+
+# Sensitive keys (anywhere)
+**/storage.key
+**/key.json
+
+**/certs/
+
+**/.env
+
