@@ -1,0 +1,4 @@
+- src: https://github.com/filatof/ansible-role-docker.git
+  scm: git
+  version: main
+  name: docker

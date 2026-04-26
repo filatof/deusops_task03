@@ -1,0 +1,10 @@
+---
+- name: Configure Docker on Servers
+  hosts: all
+  become: true
+  vars:
+    docker_version: "5:29.4.1-1"
+    docker_users:
+      - fill
+  roles:
+    - role: docker

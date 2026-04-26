@@ -1,0 +1,5 @@
+[servers]
+n8n      ansible_host=34.118.119.20      ansible_user=fill ansible_ssh_private_key_file=~/.ssh/id_ed25519
+wiki     ansible_host=34.158.225.23     ansible_user=fill ansible_ssh_private_key_file=~/.ssh/id_ed25519
+postgre  ansible_host=34.158.232.128  ansible_user=fill ansible_ssh_private_key_file=~/.ssh/id_ed25519
+ollama   ansible_host=34.118.36.207  ansible_user=fill ansible_ssh_private_key_file=~/.ssh/id_ed25519
