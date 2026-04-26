@@ -12,8 +12,8 @@ resource "google_compute_instance" "ollama_gpu" {
   }
 
   network_interface {
-    network = "default"
-    access_config {}
+    subnetwork = google_compute_subnetwork.private_subnet.id
+    network_ip = "10.10.1.6"
   }
 
   guest_accelerator {
@@ -41,8 +41,8 @@ output "ollama_internal_ip" {
 
 }
 
-output "ollama_external_ip" {
-
-  value = google_compute_instance.ollama_gpu.network_interface[0].access_config[0].nat_ip
-
-}
+# output "ollama_external_ip" {
+#
+#   value = google_compute_instance.ollama_gpu.network_interface[0].access_config[0].nat_ip
+#
+# }

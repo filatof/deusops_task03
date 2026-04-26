@@ -4,7 +4,7 @@ resource "google_compute_instance" "n8n" {
     device_name = "n8n"
 
     initialize_params {
-      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2604-lts-amd64"
+      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2404-lts-amd64"
       size  = 40
       type  = "pd-balanced"
     }
@@ -30,13 +30,8 @@ resource "google_compute_instance" "n8n" {
 
 
   network_interface {
-    access_config {
-      network_tier = "PREMIUM"
-    }
-
-    queue_count = 0
-    stack_type  = "IPV4_ONLY"
-    subnetwork  = "projects/staging-492617/regions/europe-central2/subnetworks/default"
+    subnetwork = google_compute_subnetwork.private_subnet.id
+    network_ip = "10.10.1.3"
   }
 
   reservation_affinity {
@@ -70,8 +65,8 @@ output "n8n_internal_ip" {
 
 }
 
-output "n8n_external_ip" {
-
-  value = google_compute_instance.n8n.network_interface[0].access_config[0].nat_ip
-
-}
+# output "n8n_external_ip" {
+#
+#   value = google_compute_instance.n8n.network_interface[0].access_config[0].nat_ip
+#
+# }
