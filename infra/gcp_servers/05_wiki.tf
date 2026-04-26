@@ -33,6 +33,7 @@ resource "google_compute_instance" "wiki" {
     subnetwork = google_compute_subnetwork.private_subnet.id
     network_ip = "10.10.1.5"
   }
+  tags = ["needs-nat"]
 
   reservation_affinity {
     type = "NO_RESERVATION"

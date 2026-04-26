@@ -15,6 +15,7 @@ resource "google_compute_instance" "ollama_gpu" {
     subnetwork = google_compute_subnetwork.private_subnet.id
     network_ip = "10.10.1.6"
   }
+  tags = ["needs-nat"]
 
   guest_accelerator {
     type  = "nvidia-tesla-t4"
