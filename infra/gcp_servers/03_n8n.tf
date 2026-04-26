@@ -34,6 +34,8 @@ resource "google_compute_instance" "n8n" {
     network_ip = "10.10.1.3"
   }
 
+  tags = ["needs-nat"]
+
   reservation_affinity {
     type = "NO_RESERVATION"
   }
