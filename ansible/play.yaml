@@ -1,10 +1,174 @@
 ---
-- name: Configure Docker on Servers
-  hosts: all
+# ============================================================
+# Play 1: Install Docker via role (runs first on all servers)
+# ============================================================
+- name: Install Docker
+  hosts: n8n, wiki, ollama
   become: true
-  vars:
-    docker_version: "5:29.4.1-1"
-    docker_users:
-      - fill
+
   roles:
     - role: docker
+      vars:
+        docker_users:
+          - fill
+        docker_version: "5:29.4.0-1"
+
+
+
+# ============================================================
+# Play 2: Deploy n8n
+# ============================================================
+- name: Deploy n8n
+  hosts: n8n
+  become: true
+
+  tasks:
+    - name: Create n8n directory
+      ansible.builtin.file:
+        path: "{{ n8n_app_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: Render .env for n8n
+      ansible.builtin.template:
+        src: templates/n8n_env.j2
+        dest: "{{ n8n_app_dir }}/.env"
+        owner: root
+        group: root
+        mode: '0600'
+      notify: Restart n8n
+
+    - name: Copy docker-compose for n8n
+      ansible.builtin.copy:
+        src: files/n8n-docker-compose.yaml
+        dest: "{{ n8n_app_dir }}/docker-compose.yaml"
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart n8n
+
+    - name: Start n8n
+      community.docker.docker_compose_v2:
+        project_src: "{{ n8n_app_dir }}"
+        env_files:
+          - "{{ n8n_app_dir }}/.env"
+        state: present
+
+  handlers:
+    - name: Restart n8n
+      community.docker.docker_compose_v2:
+        project_src: "{{ n8n_app_dir }}"
+        env_files:
+          - "{{ n8n_app_dir }}/.env"
+        state: restarted
+
+# ============================================================
+# Play 3: Deploy Wiki.js
+# ============================================================
+- name: Deploy Wiki.js
+  hosts: wiki
+  become: true
+
+  tasks:
+    - name: Create wiki directory
+      ansible.builtin.file:
+        path: "{{ wiki_app_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: Render .env for wiki
+      ansible.builtin.template:
+        src: templates/wiki_env.j2
+        dest: "{{ wiki_app_dir }}/.env"
+        owner: root
+        group: root
+        mode: '0600'
+      notify: Restart wiki
+
+    - name: Copy docker-compose for wiki
+      ansible.builtin.copy:
+        src: files/wiki-docker-compose.yaml
+        dest: "{{ wiki_app_dir }}/docker-compose.yaml"
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart wiki
+
+    - name: Start wiki
+      community.docker.docker_compose_v2:
+        project_src: "{{ wiki_app_dir }}"
+        env_files:
+          - "{{ wiki_app_dir }}/.env"
+        state: present
+
+  handlers:
+    - name: Restart wiki
+      community.docker.docker_compose_v2:
+        project_src: "{{ wiki_app_dir }}"
+        env_files:
+          - "{{ wiki_app_dir }}/.env"
+        state: restarted
+
+# ============================================================
+# Play 4: Deploy Ollama
+# ============================================================
+- name: Deploy Ollama
+  hosts: ollama
+  become: true
+
+  tasks:
+    - name: Create ollama directory
+      ansible.builtin.file:
+        path: "{{ ollama_app_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: Render .env for ollama
+      ansible.builtin.template:
+        src: templates/ollama_env.j2
+        dest: "{{ ollama_app_dir }}/.env"
+        owner: root
+        group: root
+        mode: '0600'
+      notify: Restart ollama
+
+    - name: Copy docker-compose for ollama (CPU)
+      ansible.builtin.copy:
+        src: files/ollama-docker-compose.yaml
+        dest: "{{ ollama_app_dir }}/docker-compose.yaml"
+        owner: root
+        group: root
+        mode: '0644'
+      when: not ollama_gpu_enabled
+      notify: Restart ollama
+
+    - name: Copy docker-compose for ollama (GPU)
+      ansible.builtin.copy:
+        src: files/ollama-docker-compose-gpu.yaml
+        dest: "{{ ollama_app_dir }}/docker-compose.yaml"
+        owner: root
+        group: root
+        mode: '0644'
+      when: ollama_gpu_enabled
+      notify: Restart ollama
+
+    - name: Start ollama
+      community.docker.docker_compose_v2:
+        project_src: "{{ ollama_app_dir }}"
+        env_files:
+          - "{{ ollama_app_dir }}/.env"
+        state: present
+
+  handlers:
+    - name: Restart ollama
+      community.docker.docker_compose_v2:
+        project_src: "{{ ollama_app_dir }}"
+        env_files:
+          - "{{ ollama_app_dir }}/.env"
+        state: restarted
