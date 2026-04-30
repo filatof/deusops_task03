@@ -59,6 +59,20 @@ resource "google_compute_firewall" "allow_ssh_bastion" {
   target_tags   = ["bastion"]
 }
 
+resource "google_compute_firewall" "allow_web_bastion" {
+  name    = "allow-web-bastion"
+  network = google_compute_network.private_vpc.name
+  project = "staging-492617"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "443"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["bastion"]
+}
+
 # 6. Фаервол: Внутренний трафик между ВМ
 resource "google_compute_firewall" "allow_internal" {
   name    = "allow-internal-traffic"
