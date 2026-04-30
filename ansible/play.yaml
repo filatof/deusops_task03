@@ -1,6 +1,6 @@
 ---
 # ============================================================
-# Play 1: Install Docker via role (runs first on all servers)
+# Install Docker via role (runs first on all servers)
 # ============================================================
 - name: Install Docker
   hosts: n8n, wiki, ollama
@@ -12,11 +12,59 @@
         docker_users:
           - fill
         docker_version: "5:29.4.0-1"
+  tags:
+    - docker
 
+# ============================================================
+# Deploy nginx
+# ============================================================
+- name: Deploy nginx
+  hosts: bastion
+  become: true
+  tasks:
+    - name: Create nginx directory
+      ansible.builtin.file:
+        path: "/etc/nginx/conf.d"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: Copy site.crt
+      ansible.builtin.copy:
+        src: ssl/site.crt
+        dest: "/etc/ssl/certs/site.crt"
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Copy site.key
+      ansible.builtin.copy:
+        src: ssl/site.key
+        dest: "/etc/ssl/certs/site.key"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copy nginx.conf
+      ansible.builtin.copy:
+        src: files/nginx.conf
+        dest: "/etc/nginx/conf.d/nginx.conf"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: latest
+        update_cache: yes
+  tags:
+    - nginx
 
 
 # ============================================================
-# Play 2: Deploy n8n
+# Deploy n8n
 # ============================================================
 - name: Deploy n8n
   hosts: n8n
