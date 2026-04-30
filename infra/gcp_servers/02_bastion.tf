@@ -6,7 +6,8 @@ resource "google_compute_instance" "bastion" {
   zone         = "europe-central2-c"
   project      = "staging-492617"
 
-  can_ip_forward = true # Обязательно для NAT
+  # can_ip_forward больше НЕ нужен, так как NAT делает Cloud NAT
+  can_ip_forward = false
 
   boot_disk {
     auto_delete = true
@@ -20,37 +21,21 @@ resource "google_compute_instance" "bastion" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.private_subnet.id
-    # Статический IP внутри подсети (опционально, но удобно)
-    network_ip = "10.10.1.2"
+    network_ip = "10.10.1.2" # Статический внутренний IP для удобства
 
-    # Внешний IP для доступа к бастиону и выхода в интернет
+    # Единственная ВМ с внешним IP
     access_config {
       network_tier = "PREMIUM"
     }
   }
 
-  # Исправленный скрипт инициализации
+  # Скрипт больше не нужен для NAT, можно оставить пустым или для обновлений
   metadata_startup_script = <<-EOT
   #!/bin/bash
-  set -e
-
-  # Включаем IP forwarding
-  sysctl -w net.ipv4.ip_forward=1
-  echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
-
-  # Очищаем старые правила и ставим NAT
-  iptables -t nat -F POSTROUTING
-  iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-
-  # Разрешаем форвардинг в firewall (на уровне ОС)
-  iptables -A FORWARD -i eth0 -o eth0 -j ACCEPT
-  iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
-
+  apt-get update && apt-get upgrade -y
   EOT
 
-  # Теги критически важны для фаервола и маршрутов
   tags = ["bastion"]
-  # Обратите внимание: у бастиона НЕТ тега "needs-nat", поэтому маршрут NAT на него не действует
 
   labels = {
     goog-ec-src = "vm_bastion"
@@ -61,7 +46,6 @@ resource "google_compute_instance" "bastion" {
     scopes = ["cloud-platform"]
   }
 
-  # Явно передаем SSH ключ в метаданные
   metadata = {
     ssh-keys = "fill:ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOlPFhFwKepToM3D/5wgUfFsPsv99sZkfUr9gnuhYYr/ fill@MacBookAir.local"
   }
@@ -69,4 +53,8 @@ resource "google_compute_instance" "bastion" {
 
 output "bastion_external_ip" {
   value = google_compute_instance.bastion.network_interface[0].access_config[0].nat_ip
+}
+
+output "bastion_internal_ip" {
+  value = google_compute_instance.bastion.network_interface[0].network_ip
 }

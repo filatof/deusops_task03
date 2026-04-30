@@ -1,20 +1,50 @@
 # 00_network.tf
 
+# 1. Приватная VPC
 resource "google_compute_network" "private_vpc" {
   name                    = "deusops-private-vpc"
   auto_create_subnetworks = false
   project                 = "staging-492617"
 }
 
+# 2. Подсеть 10.10.1.0/24
 resource "google_compute_subnetwork" "private_subnet" {
   name          = "deusops-private-subnet"
   ip_cidr_range = "10.10.1.0/24"
   region        = "europe-central2"
   network       = google_compute_network.private_vpc.id
   project       = "staging-492617"
+
+  # Позволяет ВМ без внешнего IP обращаться к API Google (опционально, но полезно)
+  private_ip_google_access = true
 }
 
-# 1. Разрешаем SSH из интернета ТОЛЬКО к бастиону
+# 3. Cloud Router (обязателен для работы Cloud NAT)
+resource "google_compute_router" "nat_router" {
+  name    = "deusops-nat-router"
+  region  = "europe-central2"
+  network = google_compute_network.private_vpc.id
+  project = "staging-492617"
+}
+
+# 4. Cloud NAT (управляемый шлюз в интернет)
+resource "google_compute_router_nat" "nat_gateway" {
+  name                               = "deusops-nat-gateway"
+  router                             = google_compute_router.nat_router.name
+  region                             = "europe-central2"
+  project                            = "staging-492617"
+
+  nat_ip_allocate_option             = "AUTO_ONLY" # Google сам выделит IP
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+
+  # Логирование (опционально)
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
+}
+
+# 5. Фаервол: SSH из интернета ТОЛЬКО к бастиону
 resource "google_compute_firewall" "allow_ssh_bastion" {
   name    = "allow-ssh-bastion"
   network = google_compute_network.private_vpc.name
@@ -26,10 +56,10 @@ resource "google_compute_firewall" "allow_ssh_bastion" {
   }
 
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["bastion"] # Применяется только к ВМ с этим тегом
+  target_tags   = ["bastion"]
 }
 
-# 2. Разрешаем весь внутренний трафик
+# 6. Фаервол: Внутренний трафик между ВМ
 resource "google_compute_firewall" "allow_internal" {
   name    = "allow-internal-traffic"
   network = google_compute_network.private_vpc.name
@@ -48,44 +78,4 @@ resource "google_compute_firewall" "allow_internal" {
   }
 
   source_ranges = ["10.10.1.0/24"]
-}
-
-# 3. Разрешаем исходящий трафик (Egress)
-resource "google_compute_firewall" "allow_egress" {
-  name    = "allow-egress-internet"
-  network = google_compute_network.private_vpc.name
-  project = "staging-492617"
-
-  direction = "EGRESS"
-  allow {
-    protocol = "all"
-  }
-  destination_ranges = ["0.0.0.0/0"]
-}
-
-# 4. Маршрут в ИНТЕРНЕТ через шлюз Google (чтобы сам бастион имел доступ)
-resource "google_compute_route" "default_internet" {
-  name                   = "route-to-internet-gateway"
-  dest_range             = "0.0.0.0/0"
-  network                = google_compute_network.private_vpc.name
-  project                = "staging-492617"
-  next_hop_gateway       = "default-internet-gateway"
-  priority               = 1000
-}
-
-# 5. Маршрут для ОСТАЛЬНЫХ ВМ через Бастион (NAT)
-# Важно: priority выше (меньше число), чем у дефолтного, чтобы перехватить трафик
-# Но мы исключаем бастион через tags
-resource "google_compute_route" "nat_via_bastion" {
-  name                   = "route-to-internet-via-bastion"
-  dest_range             = "0.0.0.0/0"
-  network                = google_compute_network.private_vpc.name
-  project                = "staging-492617"
-  next_hop_instance      = google_compute_instance.bastion.name
-  next_hop_instance_zone = google_compute_instance.bastion.zone
-
-  # Применяем маршрут только к ВМ с тегом 'needs-nat', исключая сам бастион
-  tags = ["needs-nat"]
-
-  priority = 900
 }

@@ -29,7 +29,7 @@ write_files:
       GRANT ALL PRIVILEGES ON DATABASE n8ndb TO n8n;
       GRANT ALL PRIVILEGES ON DATABASE ollamadb TO ollama;
 
-  - path: /opt/postgre/docker-compose.yaml
+  - path: /opt/postgre/n8n-docker-compose.yaml
     content: |
       services:
         postgres:

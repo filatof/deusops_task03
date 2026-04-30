@@ -17,7 +17,7 @@ packages:
 
 # Делаем обратный прокси
 write_files:
-  - path: /opt/ollama/docker-compose.yaml
+  - path: /opt/ollama/n8n-docker-compose.yaml
     content: |
       services:
         ollama:

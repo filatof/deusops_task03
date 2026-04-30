@@ -17,7 +17,7 @@ packages:
 
 # Делаем обратный прокси
 write_files:
-  - path: /opt/wiki/docker-compose.yaml
+  - path: /opt/wiki/n8n-docker-compose.yaml
     content: |
       services:
         wiki:
