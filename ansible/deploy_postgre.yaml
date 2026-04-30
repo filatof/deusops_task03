@@ -1,0 +1,10 @@
+# =====================================================================
+# PostgreSQL Server Setup
+# =====================================================================
+- name: Setup PostgreSQL Server
+  hosts: postgre
+  become: true
+  roles:
+    - role: postgresql
+  tags:
+    - postgresql
