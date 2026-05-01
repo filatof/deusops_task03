@@ -1,11 +1,8 @@
- variable cloud_id {
+ variable cloudflare_api_token {
    type        = string
-   default     = "b1givfjnecaq6gsd91ml"
-   description = "cloud id"
+   description = "token cloudflare"
  }
 
- variable folder_id {
+ variable cloudflare_zone_id {
    type        = string
-   default     = "b1g7qh7t0i4sftogmaue"
-   description = "folder id"
  }
