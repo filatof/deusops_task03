@@ -58,3 +58,26 @@ output "bastion_external_ip" {
 output "bastion_internal_ip" {
   value = google_compute_instance.bastion.network_interface[0].network_ip
 }
+
+resource "local_file" "ansible_inventory" {
+  depends_on = [google_compute_instance.bastion]
+  filename = "${path.module}/../../ansible/inventory"
+  content = <<EOT
+[bastion_host]
+bastion ansible_host=${google_compute_instance.bastion.network_interface[0].access_config[0].nat_ip} ansible_user=fill ansible_port=22 ansible_ssh_private_key_file=~/.ssh/id_ed25519 ansible_python_interpreter=/usr/bin/python3
+
+[internal]
+n8n         ansible_host=10.10.1.3
+postgre     ansible_host=10.10.1.4
+wiki        ansible_host=10.10.1.5
+ollama      ansible_host=10.10.1.6
+
+# ProxyJump
+[internal:vars]
+ansible_ssh_common_args='-o ProxyJump=fill@${google_compute_instance.bastion.network_interface[0].access_config[0].nat_ip}'
+ansible_user=fill
+ansible_port=22
+ansible_ssh_private_key_file=~/.ssh/id_ed25519
+ansible_python_interpreter=/usr/bin/python3
+EOT
+}
