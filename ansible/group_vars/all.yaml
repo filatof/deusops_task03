@@ -47,6 +47,7 @@ db_schema: public
 n8n_secure_cookie: "false"
 n8n_runners_mode: internal
 n8n_webhook_url: https://n8n.eqlan.org/
+n8n_editor_base_url: "n8n.eqlan.org"
 n8n_protocol: https
 n8n_port: 5678
 vault_db_password: "n8n_pass"
@@ -64,4 +65,6 @@ vault_wiki_db_password: "wiki_pass"
 ollama_app_dir: /opt/ollama
 ollama_host: "0.0.0.0"
 ollama_gpu_enabled: true
+ollama_models:
+  - qwen3:14b
 
