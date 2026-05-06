@@ -213,6 +213,24 @@
           - "{{ ollama_app_dir }}/.env"
         state: present
 
+    - name: Wait for ollama to be ready
+      ansible.builtin.uri:
+        url: "http://localhost:11434/api/tags"
+        method: GET
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 10
+      delay: 5
+
+    - name: Pull ollama models
+      ansible.builtin.shell: |
+        docker exec ollama ollama pull {{ item }}
+      loop: "{{ ollama_models }}"
+      loop_control:
+        label: "{{ item }}"
+      changed_when: false
+
   handlers:
     - name: Restart ollama
       community.docker.docker_compose_v2:
