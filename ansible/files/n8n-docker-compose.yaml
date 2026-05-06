@@ -1,11 +1,31 @@
 services:
-  n8n:
+
+  # ============================================================
+  # Redis — брокер очереди
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ============================================================
+  # n8n-web — только UI и API, не выполняет воркфлоу
+  # ============================================================
+  n8n-web:
     image: n8nio/n8n:2.6.4
-    container_name: n8n
+    container_name: n8n-web
     restart: unless-stopped
     ports:
       - "5678:5678"
     environment:
+      # Database
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: ${DB_POSTGRESDB_HOST}
       DB_POSTGRESDB_PORT: ${DB_POSTGRESDB_PORT}
@@ -13,10 +33,53 @@ services:
       DB_POSTGRESDB_USER: ${DB_POSTGRESDB_USER}
       DB_POSTGRESDB_PASSWORD: ${DB_POSTGRESDB_PASSWORD}
       DB_POSTGRESDB_SCHEMA: ${DB_POSTGRESDB_SCHEMA}
+      # Queue mode
+      EXECUTIONS_MODE: queue
+      QUEUE_BULL_REDIS_HOST: redis
+      QUEUE_BULL_REDIS_PORT: 6379
+      # n8n settings
       N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE}
-      N8N_RUNNERS_MODE: internal
+      N8N_HOST: ${N8N_HOST}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL}
+      N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL}
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      
     volumes:
       - n8n_data:/home/node/.n8n
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # ============================================================
+  # n8n-worker — только выполнение воркфлоу
+  # ============================================================
+  n8n-worker:
+    image: n8nio/n8n:2.6.4
+    container_name: n8n-worker
+    restart: unless-stopped
+    command: worker
+    environment:
+      # Database — тот же что у web
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: ${DB_POSTGRESDB_HOST}
+      DB_POSTGRESDB_PORT: ${DB_POSTGRESDB_PORT}
+      DB_POSTGRESDB_DATABASE: ${DB_POSTGRESDB_DATABASE}
+      DB_POSTGRESDB_USER: ${DB_POSTGRESDB_USER}
+      DB_POSTGRESDB_PASSWORD: ${DB_POSTGRESDB_PASSWORD}
+      DB_POSTGRESDB_SCHEMA: ${DB_POSTGRESDB_SCHEMA}
+      # Queue mode
+      EXECUTIONS_MODE: queue
+      QUEUE_BULL_REDIS_HOST: redis
+      QUEUE_BULL_REDIS_PORT: 6379
+      # Worker не поднимает UI — эти переменные не нужны
+      N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE}
+    volumes:
+      - n8n_data:/home/node/.n8n   # shared volume — нужен для credentials
+    depends_on:
+      redis:
+        condition: service_healthy
 
 volumes:
   n8n_data:
+  redis_data:
