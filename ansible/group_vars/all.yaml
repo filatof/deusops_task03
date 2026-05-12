@@ -1,5 +1,12 @@
 ---
 # ===================================================================
+# Base configuration
+# ===================================================================
+domain_n8n:    "n8n.eqlan.org"
+ip_addr_n8n:   10.10.1.3
+domain_wiki:   "wiki.eqlan.org"
+ip_addr_wiki:  10.10.1.5
+# ===================================================================
 # PostgreSQL Configuration
 # ===================================================================
 postgresql_install: true
@@ -39,24 +46,25 @@ postgresql_databases:
 # ===================================================================
 # === n8n ===
 n8n_app_dir: /opt/n8n
-db_host: 10.10.1.4
-db_port: 5432
+db_host: "{{ postgresql_host }}"
+db_port: "{{ postgresql_port }}"
 db_name: n8ndb
 db_user: n8n
 db_schema: public
 n8n_secure_cookie: "false"
 n8n_runners_mode: internal
-n8n_webhook_url: https://n8n.eqlan.org/
+n8n_webhook_url: "https://n8n.eqlan.org/"
 n8n_editor_base_url: "n8n.eqlan.org"
 n8n_protocol: https
 n8n_port: 5678
 vault_db_password: "n8n_pass"
+n8n_encryption_key: "65bf3dd3c3d342a07812ac94a268abaf5412ecfe347847b69090b4556b2fc04e"
 
 # === Wiki ===
 wiki_app_dir: /opt/wiki
 wiki_db_type: postgres
-wiki_db_host: 10.10.1.4
-wiki_db_port: 5432
+wiki_db_host: "{{ postgresql_host }}"
+wiki_db_port: "{{ postgresql_port }}"
 wiki_db_user: wiki
 wiki_db_name: wikidb
 vault_wiki_db_password: "wiki_pass"
