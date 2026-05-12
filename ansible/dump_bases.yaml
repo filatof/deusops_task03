@@ -1,0 +1,48 @@
+- name: Dump PostgreSQL databases and archive
+  hosts: postgre
+  become: true
+
+  vars:
+    dump_dest: "/tmp/pg_dumps"
+    dump_archive: "base.tar.gz"
+    dumps:
+      - db: wikidb
+        file: wikidb.sql
+      - db: n8ndb
+        file: n8ndb.sql
+      - db: ollamadb
+        file: ollamadb.sql
+
+  tasks:
+    - name: Create temp directory for dumps
+      ansible.builtin.file:
+        path: "{{ dump_dest }}"
+        state: directory
+        mode: '0755'
+
+    - name: Dump each database
+      ansible.builtin.shell: |
+        sudo -u postgres pg_dump {{ item.db }} > {{ dump_dest }}/{{ item.file }}
+      loop: "{{ dumps }}"
+      loop_control:
+        label: "{{ item.db }}"
+
+    - name: Create archive
+      ansible.builtin.archive:
+        path: "{{ dump_dest }}"
+        dest: "/tmp/{{ dump_archive }}"
+        format: gz
+
+    - name: Fetch archive to local machine
+      ansible.builtin.fetch:
+        src: "/tmp/{{ dump_archive }}"
+        dest: "files/{{ dump_archive }}"
+        flat: true
+
+    - name: Cleanup temp files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/{{ dump_archive }}"
+        - "{{ dump_dest }}"
