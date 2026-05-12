@@ -47,8 +47,8 @@
         mode: '0644'
 
     - name: Copy nginx.conf
-      ansible.builtin.copy:
-        src: files/nginx.conf
+      ansible.builtin.template:
+        src: templates/nginx_conf.j2
         dest: "/etc/nginx/conf.d/nginx.conf"
         owner: root
         group: root
