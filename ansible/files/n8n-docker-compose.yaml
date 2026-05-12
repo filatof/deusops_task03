@@ -1,5 +1,4 @@
 services:
-
   # ============================================================
   # Redis — брокер очереди
   # ============================================================
@@ -16,7 +15,7 @@ services:
       retries: 5
 
   # ============================================================
-  # n8n-web — только UI и API, не выполняет воркфлоу
+  # n8n-web — UI, API, триггеры, вебхуки
   # ============================================================
   n8n-web:
     image: n8nio/n8n:2.6.4
@@ -37,6 +36,10 @@ services:
       EXECUTIONS_MODE: queue
       QUEUE_BULL_REDIS_HOST: redis
       QUEUE_BULL_REDIS_PORT: 6379
+      # Encryption key — должен совпадать у web и worker
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      # Graceful shutdown — ждать завершения текущих задач (сек)
+      N8N_GRACEFUL_SHUTDOWN_TIMEOUT: 30
       # n8n settings
       N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE}
       N8N_HOST: ${N8N_HOST}
@@ -44,12 +47,17 @@ services:
       N8N_PROTOCOL: ${N8N_PROTOCOL}
       N8N_EDITOR_BASE_URL: ${N8N_EDITOR_BASE_URL}
       WEBHOOK_URL: ${WEBHOOK_URL}
-
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   # ============================================================
   # n8n-worker — только выполнение воркфлоу
@@ -58,7 +66,7 @@ services:
     image: n8nio/n8n:2.6.4
     container_name: n8n-worker
     restart: unless-stopped
-    command: worker
+    command: worker --concurrency=10
     environment:
       # Database — тот же что у web
       DB_TYPE: postgresdb
@@ -72,12 +80,19 @@ services:
       EXECUTIONS_MODE: queue
       QUEUE_BULL_REDIS_HOST: redis
       QUEUE_BULL_REDIS_PORT: 6379
-      # Worker не поднимает UI — эти переменные не нужны
+      # Encryption key — обязан совпадать с web
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      # Graceful shutdown — воркер дождётся завершения текущих джобов
+      N8N_GRACEFUL_SHUTDOWN_TIMEOUT: 30
+      # Health check endpoint для воркера
+      QUEUE_HEALTH_CHECK_ACTIVE: true
       N8N_SECURE_COOKIE: ${N8N_SECURE_COOKIE}
     volumes:
-      - n8n_data:/home/node/.n8n   # shared volume — нужен для credentials
+      - n8n_data:/home/node/.n8n
     depends_on:
       redis:
+        condition: service_healthy
+      n8n-web:
         condition: service_healthy
 
 volumes:
