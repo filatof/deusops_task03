@@ -5,6 +5,9 @@
   vars:
     dump_dest: "/tmp/pg_dumps"
     dump_archive: "base.tar.gz"
+    pg_host: "127.0.0.1"
+    pg_user: "postgres"
+    pg_password: "postgres_pass"
     dumps:
       - db: wikidb
         file: wikidb.sql
@@ -18,11 +21,11 @@
       ansible.builtin.file:
         path: "{{ dump_dest }}"
         state: directory
-        mode: '0755'
+        mode: '0777'
 
     - name: Dump each database
       ansible.builtin.shell: |
-        sudo -u postgres pg_dump {{ item.db }} > {{ dump_dest }}/{{ item.file }}
+        PGPASSWORD="{{ pg_password }}" pg_dump -h {{ pg_host }} -U {{ pg_user }} -d {{ item.db }} -n public -F p -f {{ dump_dest }}/{{ item.file }}
       loop: "{{ dumps }}"
       loop_control:
         label: "{{ item.db }}"

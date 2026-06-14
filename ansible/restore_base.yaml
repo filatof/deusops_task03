@@ -31,7 +31,7 @@
     - name: Extract archive
       ansible.builtin.unarchive:
         src: "/tmp/{{ dump_archive }}"
-        dest: "{{ dump_dest }}"
+        dest: "/tmp" #"{{ dump_dest }}"
         remote_src: true
 
     - name: Restore each database
