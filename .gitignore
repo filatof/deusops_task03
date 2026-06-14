@@ -41,6 +41,9 @@
 **/*.bak
 **/*.tmp
 k8s/images/*
+k8s/config/kubeconfig
+k8s/config/talosconfig
+
 
 
 
