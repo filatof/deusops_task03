@@ -1,0 +1,25 @@
+for i in 1; do
+  gcloud compute instances create talos-cp-${i} \
+    --image talos-v1-13-4 \
+    --machine-type e2-standard-4 \
+    --subnet talos-subnet \
+    --tags talos-controlplane \
+    --boot-disk-size 50GB \
+    --metadata-from-file=user-data=_out/controlplane.yaml \
+    --zone europe-central2-a
+  gcloud compute instance-groups unmanaged add-instances talos-cp-group \
+    --instances talos-cp-${i} \
+    --zone europe-central2-a
+done
+
+
+for i in 1 2; do
+  gcloud compute instances create talos-worker-${i} \
+    --image talos-v1-13-4 \
+    --machine-type e2-standard-4 \
+    --subnet talos-subnet \
+    --tags talos-worker \
+    --boot-disk-size 100GB \
+    --metadata-from-file=user-data=_out/worker.yaml \
+    --zone europe-central2-a
+done
