@@ -40,5 +40,7 @@
 
 **/*.bak
 **/*.tmp
+k8s/images/*
+
 
 
