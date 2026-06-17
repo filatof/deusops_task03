@@ -1,7 +1,7 @@
-CREATE DATABASE wikidb OWNER wiki;
-CREATE DATABASE n8ndb OWNER n8n;
-CREATE DATABASE ollamadb OWNER ollama;
+CREATE DATABASE {{ wiki_db_name }} OWNER {{ wiki_db_user }};
+CREATE DATABASE {{ n8n_db_name }} OWNER {{ n8n_db_user }};
+CREATE DATABASE {{ ollama_db_name }} OWNER {{ ollama_db_user }};
 
-GRANT ALL PRIVILEGES ON DATABASE wikidb TO wiki;
-GRANT ALL PRIVILEGES ON DATABASE n8ndb TO n8n;
-GRANT ALL PRIVILEGES ON DATABASE ollamadb TO ollama;
+GRANT ALL PRIVILEGES ON DATABASE {{ wiki_db_name }} TO {{ wiki_db_user }};
+GRANT ALL PRIVILEGES ON DATABASE {{ n8n_db_name }} TO {{ n8n_db_user }};
+GRANT ALL PRIVILEGES ON DATABASE {{ ollama_db_name }} TO {{ ollama_db_user }};
