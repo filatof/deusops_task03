@@ -3,7 +3,7 @@
 # Install Docker via role (runs first on all servers)
 # ============================================================
 - name: Install Docker
-  hosts: n8n, wiki, ollama
+  hosts: n8n, wiki, ollama, postgre
   become: true
 
   roles:
@@ -62,6 +62,134 @@
   tags:
     - nginx
 
+# ============================================================
+# Postgre n8n
+# ============================================================
+- name: Deploy Postgre
+  hosts: postgre
+  become: true
+
+  tasks:
+    - name: Create Postgre directory
+      ansible.builtin.file:
+        path: "{{ postgre_app_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: Create directory for database init
+      ansible.builtin.file:
+        path: "{{ postgre_app_dir }}/docker-entrypoint-initdb.d"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: Render initdb create users for postgre
+      ansible.builtin.template:
+        src: templates/01-create-users.sql.j2
+        dest: "{{ postgre_app_dir }}/docker-entrypoint-initdb.d"
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Render initdb create database for postgre
+      ansible.builtin.template:
+        src: templates/02-create-databases.sql.j2
+        dest: "{{ postgre_app_dir }}/docker-entrypoint-initdb.d"
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: Render .env for postgre
+      ansible.builtin.template:
+        src: templates/postgre_env.j2
+        dest: "{{ postgre_app_dir }}/.env"
+        owner: root
+        group: root
+        mode: '0600'
+      notify: Restart postgre
+
+    - name: Copy docker-compose for postgre
+      ansible.builtin.copy:
+        src: files/postgre-docker-compose.yaml
+        dest: "{{ postgre_app_dir }}/docker-compose.yaml"
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart postgre
+
+    - name: Start postgre
+      community.docker.docker_compose_v2:
+        project_src: "{{ postgre_app_dir }}"
+        env_files:
+          - "{{ postgre_app_dir }}/.env"
+        state: present
+
+  handlers:
+    - name: Restart postgre
+      community.docker.docker_compose_v2:
+        project_src: "{{ postgre_app_dir }}"
+        env_files:
+          - "{{ postgre_app_dir }}/.env"
+        state: restarted
+
+# ============================================================
+# Restore postgre
+# ============================================================
+- name: Restore PostgreSQL databases from dumps
+  hosts: postgre
+  become: true
+
+  vars:
+    dump_archive: "base.tar.gz"
+    dump_src: "files/{{ dump_archive }}"
+    dump_dest: "/tmp/pg_dumps"
+    dumps:
+      - db: wikidb
+        file: wikidb.sql
+      - db: n8ndb
+        file: n8ndb.sql
+      - db: ollamadb
+        file: ollamadb.sql
+
+  tasks:
+    - name: Create temp directory for dumps
+      ansible.builtin.file:
+        path: "{{ dump_dest }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy archive to server
+      ansible.builtin.copy:
+        src: "{{ dump_src }}"
+        dest: "/tmp/{{ dump_archive }}"
+        mode: '0644'
+
+    - name: Extract archive
+      ansible.builtin.unarchive:
+        src: "/tmp/{{ dump_archive }}"
+        dest: "/tmp" #"{{ dump_dest }}"
+        remote_src: true
+
+    - name: Restore each database
+      ansible.builtin.shell: |
+        docker cp {{ dump_dest }}/{{ item.file }} postgres_container:/tmp/{{ item.file }}
+        docker exec -e PGPASSWORD="{{ postgres_password }}" postgres_container \
+          psql -U postgres -d {{ item.db }} -f /tmp/{{ item.file }}
+        docker exec postgres_container rm /tmp/{{ item.file }}
+      loop: "{{ dumps }}"
+      loop_control:
+        label: "{{ item.db }}"
+
+    - name: Cleanup temp files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/{{ dump_archive }}"
+        - "{{ dump_dest }}"
 
 # ============================================================
 # Deploy n8n
@@ -139,8 +267,8 @@
 
     - name: Copy docker-compose for wiki
       ansible.builtin.copy:
-        src: files/wiki-docker-compose.yaml
-        dest: "{{ wiki_app_dir }}/docker-compose.yaml"
+        src: files/wiki-postgre-docker-compose.yaml
+        dest: "{{ wiki_app_dir }}/postgre-docker-compose.yaml"
         owner: root
         group: root
         mode: '0644'
@@ -188,8 +316,8 @@
 
     - name: Copy docker-compose for ollama (CPU)
       ansible.builtin.copy:
-        src: files/ollama-docker-compose.yaml
-        dest: "{{ ollama_app_dir }}/docker-compose.yaml"
+        src: files/ollama-postgre-docker-compose.yaml
+        dest: "{{ ollama_app_dir }}/postgre-docker-compose.yaml"
         owner: root
         group: root
         mode: '0644'
@@ -199,7 +327,7 @@
     - name: Copy docker-compose for ollama (GPU)
       ansible.builtin.copy:
         src: files/ollama-docker-compose-gpu.yaml
-        dest: "{{ ollama_app_dir }}/docker-compose.yaml"
+        dest: "{{ ollama_app_dir }}/postgre-docker-compose.yaml"
         owner: root
         group: root
         mode: '0644'
