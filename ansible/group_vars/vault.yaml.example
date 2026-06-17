@@ -1,0 +1,6 @@
+---
+#vault_wiki_db_password: wiki_pass
+#vault_n8n_db_password: n8n_pass
+#vault_ollama_db_password: ollama_pass
+#vault_postgre_password: "09876543"
+#vault_n8n_encryption_key: "65bf3dd3c3d342a07812ac94a268abaf5412ecfe347847b69090b4556b2fc04e"
