@@ -1,4 +1,5 @@
 ---
-# ansible-vault encrypt group_vars/all/vault.yml
-#vault_db_password: "CHANGE_ME"           # n8n
-#vault_wiki_db_password: "CHANGE_ME"      # wiki
+vault_wiki_db_password: wiki_pass
+vault_n8n_db_password: n8n_pass
+vault_ollama_db_password: ollama_pass
+vault_postgre_password: "09876543"
