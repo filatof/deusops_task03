@@ -16,32 +16,8 @@ postgresql_port: 5432
 postgres_user: postgres
 postgres_password: "{{ vault_postgre_password }}"
 postgre_app_dir: /opt/postgre
-
 # PostgreSQL listen address (remote connect)
 postgresql_listen_addresses: "*"
-
-# Database settings
-#postgresql_databases:
-#  - name: wikidb
-#    schema: public
-#    owner: wiki
-#    user: wiki
-#    password: "wiki_pass"
-#    extensions: []
-#
-#  - name: n8ndb
-#    schema: public
-#    owner: n8n
-#    user: n8n
-#    password: "n8n_pass"
-#    extensions: []
-#
-#  - name: ollamadb
-#    schema: public
-#    owner: ollama
-#    user: ollama
-#    password: "ollama_pass"
-#    extensions: []
 
 # ===================================================================
 # Configuration
@@ -60,7 +36,7 @@ n8n_webhook_url: "https://n8n.eqlan.org/"
 n8n_editor_base_url: "n8n.eqlan.org"
 n8n_protocol: https
 n8n_port: 5678
-n8n_encryption_key: "65bf3dd3c3d342a07812ac94a268abaf5412ecfe347847b69090b4556b2fc04e"
+n8n_encryption_key: "{{ vault_n8n_encryption_key }}"
 
 # === Wiki ===
 wiki_app_dir: /opt/wiki
