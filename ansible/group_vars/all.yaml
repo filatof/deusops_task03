@@ -13,33 +13,35 @@ postgresql_install: true
 postgresql_version: "18"  # или "latest"
 postgresql_host: "10.10.1.4"  # IP сервера PostgreSQL
 postgresql_port: 5432
-postgres_password: "09876543"
+postgres_user: postgres
+postgres_password: "{{ vault_postgre_password }}"
+postgre_app_dir: /opt/postgre
 
 # PostgreSQL listen address (remote connect)
 postgresql_listen_addresses: "*"
 
 # Database settings
-postgresql_databases:
-  - name: wikidb
-    schema: public
-    owner: wiki
-    user: wiki
-    password: "wiki_pass"
-    extensions: []
-
-  - name: n8ndb
-    schema: public
-    owner: n8n
-    user: n8n
-    password: "n8n_pass"
-    extensions: []
-
-  - name: ollamadb
-    schema: public
-    owner: ollama
-    user: ollama
-    password: "ollama_pass"
-    extensions: []
+#postgresql_databases:
+#  - name: wikidb
+#    schema: public
+#    owner: wiki
+#    user: wiki
+#    password: "wiki_pass"
+#    extensions: []
+#
+#  - name: n8ndb
+#    schema: public
+#    owner: n8n
+#    user: n8n
+#    password: "n8n_pass"
+#    extensions: []
+#
+#  - name: ollamadb
+#    schema: public
+#    owner: ollama
+#    user: ollama
+#    password: "ollama_pass"
+#    extensions: []
 
 # ===================================================================
 # Configuration
@@ -48,8 +50,9 @@ postgresql_databases:
 n8n_app_dir: /opt/n8n
 db_host: "{{ postgresql_host }}"
 db_port: "{{ postgresql_port }}"
-db_name: n8ndb
-db_user: n8n
+n8n_db_user: n8n
+n8n_db_name: n8ndb
+n8n_db_password: "{{ vault_n8n_db_password }}"
 db_schema: public
 n8n_secure_cookie: "false"
 n8n_runners_mode: internal
@@ -57,7 +60,6 @@ n8n_webhook_url: "https://n8n.eqlan.org/"
 n8n_editor_base_url: "n8n.eqlan.org"
 n8n_protocol: https
 n8n_port: 5678
-vault_db_password: "n8n_pass"
 n8n_encryption_key: "65bf3dd3c3d342a07812ac94a268abaf5412ecfe347847b69090b4556b2fc04e"
 
 # === Wiki ===
@@ -67,11 +69,16 @@ wiki_db_host: "{{ postgresql_host }}"
 wiki_db_port: "{{ postgresql_port }}"
 wiki_db_user: wiki
 wiki_db_name: wikidb
-vault_wiki_db_password: "wiki_pass"
+wiki_db_password: "{{ vault_wiki_db_password }}"
+
+#vault_wiki_db_password: "wiki_pass"
 
 # === Ollama ===
 ollama_app_dir: /opt/ollama
 ollama_host: "0.0.0.0"
+ollama_db_user: ollama
+ollama_db_name: ollamadb
+ollama_db_password: "{{ vault_ollama_db_password }}"
 ollama_gpu_enabled: true
 ollama_models:
   - qwen3:14b
