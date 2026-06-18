@@ -63,7 +63,7 @@
     - nginx
 
 # ============================================================
-# Postgre n8n
+# Deploy Postgre
 # ============================================================
 - name: Deploy Postgre
   hosts: postgre
@@ -89,7 +89,7 @@
     - name: Render initdb create users for postgre
       ansible.builtin.template:
         src: templates/01-create-users.sql.j2
-        dest: "{{ postgre_app_dir }}/docker-entrypoint-initdb.d"
+        dest: "{{ postgre_app_dir }}/docker-entrypoint-initdb.d/01-create-users.sql"
         owner: root
         group: root
         mode: '0600'
@@ -97,7 +97,7 @@
     - name: Render initdb create database for postgre
       ansible.builtin.template:
         src: templates/02-create-databases.sql.j2
-        dest: "{{ postgre_app_dir }}/docker-entrypoint-initdb.d"
+        dest: "{{ postgre_app_dir }}/docker-entrypoint-initdb.d/02-create-databases.sql"
         owner: root
         group: root
         mode: '0600'
