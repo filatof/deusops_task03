@@ -43,6 +43,7 @@
 **/images/*
 **/kubeconfig
 **/talosconfig
+infra/proxmox_k8s/config/
 
 
 
