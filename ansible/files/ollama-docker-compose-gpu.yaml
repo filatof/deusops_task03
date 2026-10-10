@@ -1,6 +1,6 @@
 services:
   ollama:
-    image: ollama/ollama:0.18.2
+    image: nexus.eqlan.ru/ollama/ollama:0.18.2
     container_name: ollama
     restart: unless-stopped
     ports:

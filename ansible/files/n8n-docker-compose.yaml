@@ -3,7 +3,7 @@ services:
   # Redis — брокер очереди
   # ============================================================
   redis:
-    image: redis:7-alpine
+    image: nexus.eqlan.ru/library/redis:7-alpine
     container_name: redis
     restart: unless-stopped
     volumes:
@@ -18,7 +18,7 @@ services:
   # n8n-web — UI, API, триггеры, вебхуки
   # ============================================================
   n8n-web:
-    image: n8nio/n8n:2.6.4
+    image: nexus.eqlan.ru/n8nio/n8n:2.6.4
     container_name: n8n-web
     restart: unless-stopped
     ports:
@@ -63,7 +63,7 @@ services:
   # n8n-worker — только выполнение воркфлоу
   # ============================================================
   n8n-worker:
-    image: n8nio/n8n:2.6.4
+    image: nexus.eqlan.ru/n8nio/n8n:2.6.4
     container_name: n8n-worker
     restart: unless-stopped
     command: worker --concurrency=10

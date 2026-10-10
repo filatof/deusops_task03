@@ -1,6 +1,6 @@
 services:
   wiki:
-    image: requarks/wiki:2
+    image: nexus.eqlan.ru/requarks/wiki:2
     environment:
       DB_TYPE: ${DB_TYPE}
       DB_HOST: ${DB_HOST}
@@ -11,3 +11,22 @@ services:
     restart: unless-stopped
     ports:
       - "80:3000"
+  avr-docs-mcp:
+    image: agentvoiceresponse/avr-docs-mcp:latest
+    container_name: avr-docs-mcp
+    restart: unless-stopped
+    ports:
+      - "3001:3000"     # 80 уже занят wiki, наружу отдаём на другом порту
+    environment:
+      WIKI_JS_BASE_URL: ${WIKI_JS_BASE_URL}   # обращение по имени сервиса, не по 80/внешнему домену
+      WIKI_JS_API_KEY: ${WIKI_JS_API_KEY}
+      MCP_MODE: ${MCP_MODE}                        # без http-режима это будет stdio-процесс без сетевого доступа
+      PORT: ${PORT}
+      LOG_LEVEL: "info"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - wiki
