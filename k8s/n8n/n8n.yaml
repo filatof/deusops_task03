@@ -61,7 +61,7 @@ spec:
             limits:
               memory: 1Gi
           volumeMounts:
-            - name: n8n-claim0
+            - name: n8n-claim
               mountPath: /home/node/.n8n
       volumes:
         - name: n8n-claim
