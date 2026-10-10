@@ -6,76 +6,38 @@ metadata:
   name: postgres
   namespace: postgres
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      service: postgres
-  strategy:
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        service: postgres
-    spec:
-      containers:
-        - image: nexus.eqlan.ru/library/postgres:18.3
-          name: postgres
-          resources:
-            limits:
-              cpu: "4"
-              memory: 4Gi
-            requests:
-              cpu: "1"
-              memory: 2Gi
-          ports:
-            - containerPort: 5432
-          volumeMounts:
-            - name: postgresql-pv
-              mountPath: /var/lib/postgresql/data
-            - name: init-data
-              mountPath: /docker-entrypoint-initdb.d/init-n8n-user.sh
-              subPath: init-data.sh
-          env:
-            - name: PGDATA
-              value: /var/lib/postgresql/data/pgdata
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: POSTGRES_PASSWORD
-            - name: POSTGRES_DB
-              value: n8n
-            - name: POSTGRES_NON_ROOT_USER
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: POSTGRES_NON_ROOT_USER
-            - name: POSTGRES_NON_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: postgres-secret
-                  key: POSTGRES_NON_ROOT_PASSWORD
-            - name:   POSTGRES_HOST
-              value: postgres-service
-            - name: POSTGRES_PORT
-              value: '5432'
-      restartPolicy: Always
-      volumes:
+  nodeSelector:
+    kubernetes.io/hostname: k8s-talos-vm-03
+  containers:
+    - name: postgres
+      image: nexus.eqlan.ru/library/postgres:18.3
+      ports:
+        - containerPort: 5432
+      volumeMounts:
         - name: postgresql-pv
-          persistentVolumeClaim:
-            claimName: postgresql-pv
-        - name: postgres-secret
-          secret:
-            secretName: postgres-secret
+          mountPath: /var/lib/postgresql/data
         - name: init-data
-          configMap:
-            name: init-data
-            defaultMode: 0744
+          mountPath: /docker-entrypoint-initdb.d
+      env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: POSTGRES_DB
+          value: postgres
+        - name: POSTGRES_USER
+          valueFrom: {secretKeyRef: {name: postgres-secret, key: POSTGRES_USER}}
+        - name: POSTGRES_PASSWORD
+          valueFrom: {secretKeyRef: {name: postgres-secret, key: POSTGRES_PASSWORD}}
+        - name: WIKI_DB_PASSWORD
+          valueFrom: {secretKeyRef: {name: postgres-secret, key: WIKI_DB_PASSWORD}}
+        - name: N8N_DB_PASSWORD
+          valueFrom: {secretKeyRef: {name: postgres-secret, key: N8N_DB_PASSWORD}}
+        - name: OLLAMA_DB_PASSWORD
+          valueFrom: {secretKeyRef: {name: postgres-secret, key: OLLAMA_DB_PASSWORD}}
+  volumes:
+    - name: postgresql-pv
+      persistentVolumeClaim:
+        claimName: postgresql-pv
+    - name: init-data
+      configMap:
+        name: init-data
+        defaultMode: 0755
