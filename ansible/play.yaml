@@ -2,18 +2,18 @@
 # ============================================================
 # Install Docker via role (runs first on all servers)
 # ============================================================
-- name: Install Docker
-  hosts: n8n, wiki, ollama, postgre
-  become: true
-
-  roles:
-    - role: docker
-      vars:
-        docker_users:
-          - fill
-        docker_version: "5:29.4.0-1"
-  tags:
-    - docker
+#- name: Install Docker
+#  hosts: n8n, wiki, ollama, postgre
+#  become: true
+#
+#  roles:
+#    - role: docker
+#      vars:
+#        docker_users:
+#          - fill
+#        docker_version: "5:29.4.0-1"
+#  tags:
+#    - docker
 
 # ============================================================
 # Deploy nginx
@@ -84,7 +84,7 @@
         state: directory
         owner: root
         group: root
-        mode: '0750'
+        mode: '0755'
 
     - name: Render initdb create users for postgre
       ansible.builtin.template:
@@ -92,7 +92,7 @@
         dest: "{{ postgre_app_dir }}/docker-entrypoint-initdb.d/01-create-users.sql"
         owner: root
         group: root
-        mode: '0600'
+        mode: '0644'
 
     - name: Render initdb create database for postgre
       ansible.builtin.template:
@@ -100,7 +100,7 @@
         dest: "{{ postgre_app_dir }}/docker-entrypoint-initdb.d/02-create-databases.sql"
         owner: root
         group: root
-        mode: '0600'
+        mode: '0644'
 
     - name: Render .env for postgre
       ansible.builtin.template:
@@ -126,6 +126,8 @@
         env_files:
           - "{{ postgre_app_dir }}/.env"
         state: present
+  tags:
+    - postgre
 
   handlers:
     - name: Restart postgre
@@ -190,6 +192,8 @@
       loop:
         - "/tmp/{{ dump_archive }}"
         - "{{ dump_dest }}"
+  tags:
+    - postgre_restore
 
 # ============================================================
 # Deploy n8n
@@ -240,6 +244,9 @@
           - "{{ n8n_app_dir }}/.env"
         state: restarted
 
+  tags:
+    - n8n
+
 # ============================================================
 # Play 3: Deploy Wiki.js
 # ============================================================
@@ -267,8 +274,8 @@
 
     - name: Copy docker-compose for wiki
       ansible.builtin.copy:
-        src: files/wiki-postgre-docker-compose.yaml
-        dest: "{{ wiki_app_dir }}/postgre-docker-compose.yaml"
+        src: files/wiki-docker-compose.yaml
+        dest: "{{ wiki_app_dir }}/docker-compose.yaml"
         owner: root
         group: root
         mode: '0644'
@@ -288,6 +295,9 @@
         env_files:
           - "{{ wiki_app_dir }}/.env"
         state: restarted
+
+  tags:
+    - wiki
 
 # ============================================================
 # Play 4: Deploy Ollama
@@ -316,8 +326,8 @@
 
     - name: Copy docker-compose for ollama (CPU)
       ansible.builtin.copy:
-        src: files/ollama-postgre-docker-compose.yaml
-        dest: "{{ ollama_app_dir }}/postgre-docker-compose.yaml"
+        src: files/ollama-docker-compose.yaml
+        dest: "{{ ollama_app_dir }}/docker-compose.yaml"
         owner: root
         group: root
         mode: '0644'
@@ -327,12 +337,15 @@
     - name: Copy docker-compose for ollama (GPU)
       ansible.builtin.copy:
         src: files/ollama-docker-compose-gpu.yaml
-        dest: "{{ ollama_app_dir }}/postgre-docker-compose.yaml"
+        dest: "{{ ollama_app_dir }}/docker-compose.yaml"
         owner: root
         group: root
         mode: '0644'
       when: ollama_gpu_enabled
       notify: Restart ollama
+
+    - name: Configure GPU driver and container toolkit if GPU present
+      ansible.builtin.import_tasks: nvidia_gpu_setup.yaml
 
     - name: Start ollama
       community.docker.docker_compose_v2:
@@ -366,3 +379,6 @@
         env_files:
           - "{{ ollama_app_dir }}/.env"
         state: restarted
+
+  tags:
+    - ollama

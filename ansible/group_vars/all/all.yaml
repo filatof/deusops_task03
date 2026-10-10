@@ -2,16 +2,16 @@
 # ===================================================================
 # Base configuration
 # ===================================================================
-domain_n8n:    "n8n.eqlan.org"
-ip_addr_n8n:   10.10.1.3
-domain_wiki:   "wiki.eqlan.org"
-ip_addr_wiki:  10.10.1.5
+domain_n8n:    "n8n.eqlan.su"
+ip_addr_n8n:   10.10.0.103
+domain_wiki:   "wiki.eqlan.su"
+ip_addr_wiki:  10.10.0.102
 # ===================================================================
 # PostgreSQL Configuration
 # ===================================================================
 postgresql_install: true
 postgresql_version: "18"  # или "latest"
-postgresql_host: "10.10.1.4"  # IP сервера PostgreSQL
+postgresql_host: "10.10.0.101"  # IP сервера PostgreSQL
 postgresql_port: 5432
 postgres_user: postgres
 postgres_password: "{{ vault_postgre_password }}"
@@ -47,6 +47,13 @@ wiki_db_user: wiki
 wiki_db_name: wikidb
 wiki_db_password: "{{ vault_wiki_db_password }}"
 
+#mcp
+wiki_js_base_url: "http://wiki:3000"
+wiki_js_api_key: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGkiOjEsImdycCI6MSwiaWF0IjoxNzg5NDcxMzQwLCJleHAiOjE4ODQxNDQxNDAsImF1ZCI6InVybjp3aWtpLmpzIiwiaXNzIjoidXJuOndpa2kuanMifQ.a8iJQCaKCtSiO3ZQWOgTvNsr_QNBc37GXlQB7JXVAs1utqUeDJooNLAv9o1xUVzepKzFw0JRNM51JSzkMQeD5hUeS84SGLNclVCl4HeH840ypefebp4vTyE4XP5b4nuCtgmRCssx8y4326dFFa0HsOzO_F0QZlDAWPBzrtvoi-LjvctErD4fG3-494eQ7sTQ0H-RuxMdONBSXUmU8Q2RbHFYNyLAsytEU_0_Y-G8ibsW3a8CW6v023ZTuCqQU5mIUwhzN5DTViCCudrA6ZD8kpS6iYKdDx_sYzSk7w_DrqN3RIS58rhbAAWwfCLB2S6qXgTaoRqnQuxCcYopSN1qIA"
+wiki_log_level: "info"
+wiki_mcp_mode: "http"
+wiki_mcp_port: 3000
+
 #vault_wiki_db_password: "wiki_pass"
 
 # === Ollama ===
@@ -57,5 +64,5 @@ ollama_db_name: ollamadb
 ollama_db_password: "{{ vault_ollama_db_password }}"
 ollama_gpu_enabled: true
 ollama_models:
-  - qwen3:14b
+  - qwen3.5:9b
 

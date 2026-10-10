@@ -1,15 +1,11 @@
-[bastion_host]
-bastion ansible_host=111.88.253.168 ansible_user=fill ansible_port=22 ansible_ssh_private_key_file=~/.ssh/id_ed25519 ansible_python_interpreter=/usr/bin/python3
-
 [internal]
-n8n         ansible_host=10.10.1.3
-postgre     ansible_host=10.10.1.4
-wiki        ansible_host=10.10.1.5
-ollama      ansible_host=10.10.1.6
+postgre     ansible_host=10.10.0.101
+wiki        ansible_host=10.10.0.102
+n8n         ansible_host=10.10.0.103
+ollama      ansible_host=10.10.0.104
 
-# ProxyJump
+
 [internal:vars]
-ansible_ssh_common_args='-o ProxyJump=fill@111.88.253.168'
 ansible_user=fill
 ansible_port=22
 ansible_ssh_private_key_file=~/.ssh/id_ed25519

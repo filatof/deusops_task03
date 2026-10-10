@@ -1,0 +1,90 @@
+# ============================================================
+# Detect GPU and configure NVIDIA driver + container toolkit
+# ============================================================
+- name: Check for NVIDIA GPU presence
+  ansible.builtin.shell: lspci | grep -i nvidia
+  register: gpu_check
+  changed_when: false
+  failed_when: false
+
+- name: Set fact whether GPU is present
+  ansible.builtin.set_fact:
+    gpu_present: "{{ gpu_check.rc == 0 }}"
+
+- name: GPU detection result
+  ansible.builtin.debug:
+    msg: "GPU present: {{ gpu_present }}"
+
+- name: Check if nvidia-smi is available (driver already installed)
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_smi_check
+  changed_when: false
+  failed_when: false
+  when: gpu_present
+
+- name: Install nvidia-driver
+  ansible.builtin.apt:
+    name: "{{ nvidia_driver_package | default('nvidia-driver-550') }}"
+    state: present
+    update_cache: true
+  register: driver_install
+  when:
+    - gpu_present
+    - nvidia_smi_check.rc != 0
+
+- name: Reboot after driver install
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+  when:
+    - gpu_present
+    - driver_install is changed
+
+- name: Add NVIDIA container toolkit GPG key
+  ansible.builtin.apt_key:
+    url: https://nvidia.github.io/libnvidia-container/gpgkey
+    state: present
+  when: gpu_present
+
+- name: Get distribution id for NVIDIA container toolkit repo
+  ansible.builtin.set_fact:
+    nvidia_distribution: "{{ ansible_distribution | lower }}{{ ansible_distribution_version }}"
+  when: gpu_present
+
+- name: Add NVIDIA container toolkit apt repository
+  ansible.builtin.get_url:
+    url: "https://nvidia.github.io/libnvidia-container/{{ nvidia_distribution }}/libnvidia-container.list"
+    dest: /etc/apt/sources.list.d/nvidia-container-toolkit.list
+    mode: '0644'
+  when: gpu_present
+
+- name: Check whether nvidia-container-toolkit is already installed
+  ansible.builtin.command: dpkg -s nvidia-container-toolkit
+  register: toolkit_check
+  changed_when: false
+  failed_when: false
+  when: gpu_present
+
+- name: Install nvidia-container-toolkit
+  ansible.builtin.apt:
+    name: nvidia-container-toolkit
+    state: present
+    update_cache: true
+  when:
+    - gpu_present
+    - toolkit_check.rc != 0
+
+- name: Configure docker runtime for nvidia-container-toolkit
+  ansible.builtin.command: nvidia-ctk runtime configure --runtime=docker
+  register: nvidia_ctk_configure
+  changed_when: "'Wrote updated config' in nvidia_ctk_configure.stdout or nvidia_ctk_configure.rc == 0"
+  when:
+    - gpu_present
+    - toolkit_check.rc != 0
+
+- name: Restart docker to apply nvidia runtime
+  ansible.builtin.systemd:
+    name: docker
+    state: restarted
+  when:
+    - gpu_present
+    - toolkit_check.rc != 0
