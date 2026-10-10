@@ -31,7 +31,7 @@ resource "google_compute_instance" "wiki" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.private_subnet.id
-    network_ip = "10.10.1.5"
+    network_ip = "10.10.0.102"
   }
   tags = ["needs-nat"]
 
@@ -58,6 +58,7 @@ resource "google_compute_instance" "wiki" {
   }
 
   zone = "europe-central2-c"
+  #zone         = "europe-west4-c"
 }
 
 output "wiki_internal_ip" {

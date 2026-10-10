@@ -4,6 +4,7 @@ resource "google_compute_instance" "bastion" {
   name         = "bastion"
   machine_type = "e2-micro"
   zone         = "europe-central2-c"
+  #zone         = "europe-west4-c"
   project      = "staging-492617"
 
   # can_ip_forward больше НЕ нужен, так как NAT делает Cloud NAT
@@ -21,7 +22,7 @@ resource "google_compute_instance" "bastion" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.private_subnet.id
-    network_ip = "10.10.1.2" # Статический внутренний IP для удобства
+    network_ip = "10.10.0.100" # Статический внутренний IP для удобства
 
     # Единственная ВМ с внешним IP
     access_config {

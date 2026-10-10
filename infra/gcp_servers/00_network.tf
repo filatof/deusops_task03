@@ -10,8 +10,9 @@ resource "google_compute_network" "private_vpc" {
 # 2. Подсеть 10.10.1.0/24
 resource "google_compute_subnetwork" "private_subnet" {
   name          = "deusops-private-subnet"
-  ip_cidr_range = "10.10.1.0/24"
+  ip_cidr_range = "10.10.0.0/24"
   region        = "europe-central2"
+  #region        = "europe-west4"
   network       = google_compute_network.private_vpc.id
   project       = "staging-492617"
 
@@ -23,6 +24,7 @@ resource "google_compute_subnetwork" "private_subnet" {
 resource "google_compute_router" "nat_router" {
   name    = "deusops-nat-router"
   region  = "europe-central2"
+  #region        = "europe-west4"
   network = google_compute_network.private_vpc.id
   project = "staging-492617"
 }
@@ -32,6 +34,7 @@ resource "google_compute_router_nat" "nat_gateway" {
   name                               = "deusops-nat-gateway"
   router                             = google_compute_router.nat_router.name
   region                             = "europe-central2"
+  #region        = "europe-west4"
   project                            = "staging-492617"
 
   nat_ip_allocate_option             = "AUTO_ONLY" # Google сам выделит IP
@@ -91,5 +94,5 @@ resource "google_compute_firewall" "allow_internal" {
     ports    = ["0-65535"]
   }
 
-  source_ranges = ["10.10.1.0/24"]
+  source_ranges = ["10.10.0.0/24"]
 }

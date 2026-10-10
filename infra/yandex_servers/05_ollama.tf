@@ -1,14 +1,22 @@
 resource "yandex_compute_instance" "ollama" {
   name        = "ollama"
   hostname    = "ollama"
-  platform_id = "standard-v3"
+  #platform_id = "standard-v3"
   zone        = "ru-central1-a"
 
+  # resources {
+  #   cores  = 8
+  #   memory = 32
+  #   #core_fraction = 50
+  #   #gpus = 1
+  # }
+
+  platform_id = "standard-v3-t4"
   resources {
-    cores  = 8
-    memory = 32
-    #core_fraction = 50
-    #gpus = 1
+    memory        = 16
+    cores         = 4
+    core_fraction = 100
+    gpus          = 1
   }
 
   boot_disk {
@@ -18,7 +26,7 @@ resource "yandex_compute_instance" "ollama" {
   network_interface {
     index     = 1
     subnet_id = yandex_vpc_subnet.my_subnet.id
-    ip_address = "10.10.1.40"
+    ip_address = "10.10.0.104"
     #nat = "true"
   }
 

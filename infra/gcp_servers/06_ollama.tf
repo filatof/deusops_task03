@@ -1,19 +1,20 @@
 resource "google_compute_instance" "ollama_gpu" {
   name         = "ollama-gpu"
   machine_type = "n1-standard-4"
-  zone         = "europe-central2-b"
-
+  zone         = "europe-central2-c"
+  #zone         = "europe-west4-c"
   boot_disk {
     initialize_params {
       #image = "projects/ml-images/global/images/family/common-cu124-debian-11-py310"
       image = "projects/ml-images/global/images/family/common-cu129-ubuntu-2204-nvidia-580"
+      #image = "projects/debian-cloud/global/images/debian-13-trixie-v20260609"
       size  = 50
     }
   }
 
   network_interface {
     subnetwork = google_compute_subnetwork.private_subnet.id
-    network_ip = "10.10.1.6"
+    network_ip = "10.10.0.104"
   }
   tags = ["needs-nat"]
 

@@ -29,7 +29,7 @@ resource "yandex_compute_instance" "bastion" {
   network_interface {
     index     = 1
     subnet_id = yandex_vpc_subnet.my_subnet.id
-    ip_address = "10.10.1.5"
+    #ip_address = "10.10.1.2"
     nat = "true"
   }
 

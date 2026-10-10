@@ -31,7 +31,7 @@ resource "google_compute_instance" "n8n" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.private_subnet.id
-    network_ip = "10.10.1.3"
+    network_ip = "10.10.0.103"
   }
 
   tags = ["needs-nat"]
@@ -59,6 +59,7 @@ resource "google_compute_instance" "n8n" {
   }
 
   zone = "europe-central2-c"
+  #zone         = "europe-west4-c"
 }
 
 output "n8n_internal_ip" {

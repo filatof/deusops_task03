@@ -1,4 +1,4 @@
-resource "proxmox_virtual_environment_vm" "k8s_ubuntu" {
+resource "proxmox_virtual_environment_vm" "ubuntu" {
   for_each  = var.homelab_servers
 
   name      = each.key
@@ -40,6 +40,8 @@ resource "proxmox_virtual_environment_vm" "k8s_ubuntu" {
     interface    = "scsi2"
     datastore_id = "local-zfs"
 
+    user_data_file_id = proxmox_virtual_environment_file.user_data_cloud_config[each.key].id
+
     user_account {
       username = var.user_name
       password = var.user_passwd
@@ -60,6 +62,7 @@ resource "proxmox_virtual_environment_vm" "k8s_ubuntu" {
 
   network_device {
     bridge = "vmbr1"
+    mtu    = 1380
   }
 
   operating_system {

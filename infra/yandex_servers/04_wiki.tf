@@ -17,7 +17,7 @@ resource "yandex_compute_instance" "wiki" {
   network_interface {
     index     = 1
     subnet_id = yandex_vpc_subnet.my_subnet.id
-    ip_address = "10.10.1.30"
+    ip_address = "10.10.0.102"
     #nat = "true"
   }
 

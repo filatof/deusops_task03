@@ -31,7 +31,7 @@ resource "google_compute_instance" "postgre" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.private_subnet.id
-    network_ip = "10.10.1.4"
+    network_ip = "10.10.0.101"
   }
   tags = ["needs-nat"]
 
@@ -58,6 +58,7 @@ resource "google_compute_instance" "postgre" {
   }
 
   zone = "europe-central2-c"
+  #zone         = "europe-west4-c"
 }
 
 output "postgre_internal_ip" {
