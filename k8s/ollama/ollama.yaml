@@ -21,8 +21,7 @@ spec:
         kubernetes.io/hostname: k8s-talos-gpu
       containers:
         - name: ollama
-          #image: nexus.eqlan.ru/ollama/ollama:0.40.2-rocm
-          image: nexus.eqlan.ru/ollama/ollama:0.18.2
+          image: nexus.eqlan.ru/ollama/ollama:0.40.2-rocm
           ports:
             - containerPort: 11434
           env:
