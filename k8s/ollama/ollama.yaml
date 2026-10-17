@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: ollama
+  labels:
+    service: ollama
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      service: ollama
+  template:
+    metadata:
+      labels:
+        service: ollama
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s-talos-gpu
+      containers:
+        - name: ollama
+          image: nexus.eqlan.ru/ollama/ollama:0.40.2-rocm
+          ports:
+            - containerPort: 11434
+          env:
+            - name: OLLAMA_HOST
+              value: "0.0.0.0"
+          resources:
+            requests: {cpu: "1", memory: 4Gi}
+            limits:
+              memory: 12Gi
+              amd.com/gpu: 1
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+          readinessProbe:
+            httpGet: {path: /, port: 11434}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: ollama-data
+          persistentVolumeClaim:
+            claimName: ollama-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: ollama
+  labels:
+    service: ollama
+spec:
+  type: ClusterIP
+  selector:
+    service: ollama
+  ports:
+    - name: http
+      port: 11434
+      targetPort: 11434

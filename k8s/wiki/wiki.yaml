@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wiki
+  namespace: wiki
+  labels:
+    service: wiki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: wiki
+  template:
+    metadata:
+      labels:
+        service: wiki
+    spec:
+      containers:
+        - name: wiki
+          image: nexus.eqlan.ru/requarks/wiki:2
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_TYPE
+              value: postgres
+            - name: DB_HOST
+              value: postgres-service.postgres.svc.cluster.local
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: wikidb
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef: {name: wiki-secret, key: DB_USER}
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef: {name: wiki-secret, key: DB_PASS}
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {memory: 1Gi}
+          readinessProbe:
+            httpGet: {path: /healthz, port: 3000}
+            initialDelaySeconds: 20
+            periodSeconds: 10
