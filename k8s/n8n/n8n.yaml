@@ -17,6 +17,8 @@ spec:
       labels:
         service: n8n
     spec:
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 60
       nodeSelector:
         kubernetes.io/hostname: k8s-talos-vm-02
       initContainers:
@@ -34,10 +36,20 @@ spec:
           ports:
             - containerPort: 5678
           env:
-            - { name: N8N_HOST, value: n8n.eqlan.org }
-            - { name: N8N_PROTOCOL, value: https }
-            - { name: WEBHOOK_URL, value: "https://n8n.eqlan.org/" }
-            - { name: N8N_PROXY_HOPS, value: "1" }
+            # URL / прокси
+            - name: N8N_HOST
+              value: n8n.eqlan.ru
+            - name: N8N_PORT
+              value: "5678"
+            - name: N8N_PROTOCOL
+              value: https
+            - name: N8N_EDITOR_BASE_URL
+              value: "https://n8n.eqlan.org/"
+            - name: WEBHOOK_URL
+              value: "https://n8n.eqlan.org/"
+            - name: N8N_PROXY_HOPS
+              value: "1"
+            # База данных
             - name: DB_TYPE
               value: postgresdb
             - name: DB_POSTGRESDB_HOST
@@ -48,17 +60,40 @@ spec:
               value: n8ndb
             - name: DB_POSTGRESDB_USER
               valueFrom:
-                secretKeyRef: {name: n8n-secret, key: DB_POSTGRESDB_USER}
+                secretKeyRef:
+                  name: n8n-secret
+                  key: DB_POSTGRESDB_USER
             - name: DB_POSTGRESDB_PASSWORD
               valueFrom:
-                secretKeyRef: {name: n8n-secret, key: DB_POSTGRESDB_PASSWORD}
+                secretKeyRef:
+                  name: n8n-secret
+                  key: DB_POSTGRESDB_PASSWORD
             - name: N8N_ENCRYPTION_KEY
               valueFrom:
-                secretKeyRef: {name: n8n-secret, key: N8N_ENCRYPTION_KEY}
-            - name: N8N_PORT
-              value: "5678"
-            - name: N8N_PROTOCOL
-              value: http
+                secretKeyRef:
+                  name: n8n-secret
+                  key: N8N_ENCRYPTION_KEY
+            # Queue mode
+            - name: EXECUTIONS_MODE
+              value: queue
+            - name: QUEUE_BULL_REDIS_HOST
+              value: redis
+            - name: QUEUE_BULL_REDIS_PORT
+              value: "6379"
+            - name: N8N_GRACEFUL_SHUTDOWN_TIMEOUT
+              value: "30"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 5678
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5678
+            initialDelaySeconds: 60
+            periodSeconds: 15
           resources:
             requests:
               memory: 512Mi
