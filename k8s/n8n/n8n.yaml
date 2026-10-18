@@ -38,7 +38,7 @@ spec:
           env:
             # URL / прокси
             - name: N8N_HOST
-              value: n8n.eqlan.ru
+              value: n8n.eqlan.org
             - name: N8N_PORT
               value: "5678"
             - name: N8N_PROTOCOL
