@@ -1,89 +1,64 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: n8n
+  name: redis
   namespace: n8n
   labels:
-    service: n8n
+    service: redis
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: n8n
+      service: redis
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        service: n8n
+        service: redis
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: k8s-talos-vm-02
-      initContainers:
-        - name: volume-permissions
-          image: busybox:1.36
-          command: ["sh", "-c", "chown 1000:1000 /data"]
-          volumeMounts:
-            - name: n8n-claim
-              mountPath: /data
       containers:
-        - name: n8n
-          image: nexus.eqlan.ru/n8nio/n8n:2.6.4
-          command: ["/bin/sh"]
-          args: ["-c", "sleep 5; n8n start"]
+        - name: redis
+          image: nexus.eqlan.ru/library/redis:7-alpine
+          args: ["--appendonly", "yes"]
           ports:
-            - containerPort: 5678
-          env:
-            - name: N8N_HOST
-              value: n8n.eqlan.org
-            - name: N8N_PROTOCOL
-              value: https
-            - name: WEBHOOK_URL
-              value: "https://n8n.eqlan.org/"
-            - name: N8N_PROXY_HOPS
-              value: "1"
-            - name: DB_TYPE
-              value: postgresdb
-            - name: DB_POSTGRESDB_HOST
-              value: postgres-service.postgres.svc.cluster.local
-            - name: DB_POSTGRESDB_PORT
-              value: "5432"
-            - name: DB_POSTGRESDB_DATABASE
-              value: n8ndb
-            - name: DB_POSTGRESDB_USER
-              valueFrom:
-                secretKeyRef:
-                  - name: n8n-secret
-                    key: DB_POSTGRESDB_USER
-            - name: DB_POSTGRESDB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  - name: n8n-secret
-                    key: DB_POSTGRESDB_PASSWORD
-            - name: N8N_ENCRYPTION_KEY
-              valueFrom:
-                secretKeyRef:
-                  - name: n8n-secret
-                    key: N8N_ENCRYPTION_KEY
-            - name: N8N_PORT
-              value: "5678"
-            - name: N8N_PROTOCOL
-              value: http
-            - name: EXECUTIONS_MODE
-              value: queue
-            - name: QUEUE_BULL_REDIS_HOST
-              value: redis
-            - name: QUEUE_BULL_REDIS_PORT
-              value: "6379"
+            - containerPort: 6379
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
           resources:
             requests:
-              memory: 512Mi
+              memory: 128Mi
             limits:
-              memory: 1Gi
+              memory: 512Mi
           volumeMounts:
-            - name: n8n-claim
-              mountPath: /home/node/.n8n
+            - name: redis-data
+              mountPath: /data
       volumes:
-        - name: n8n-claim
+        - name: redis-data
           persistentVolumeClaim:
-            claimName: n8n-claim
+            claimName: redis-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: n8n
+  labels:
+    service: redis
+spec:
+  type: ClusterIP
+  selector:
+    service: redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
